@@ -8,9 +8,8 @@ import org.springframework.ui.Model;
 public class HelloController {
 
     @GetMapping("hello") //hello 가 들어오면 이것이 실행됨
-
     public String hello(Model model){
-        model.addAttribute(attributeName: "data", attributeValue: "hello!!");
+        model.addAttribute("data","hello!");
         return "hello";
     }
 }

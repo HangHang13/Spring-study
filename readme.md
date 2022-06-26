@@ -81,3 +81,45 @@ Hello
 - java/hello.hellospring에 
   - controller 패키지 만들기
     - HelloController 클래스 만들기
+
+![image-20220626235905008](readme.assets/image-20220626235905008.png)
+
+![image-20220627000256921](readme.assets/image-20220627000256921.png)
+
+```java
+//main/java/hello.hellospirng/controller/HelloController.java
+
+package hello.hellospring.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.ui.Model;
+
+@Controller
+public class HelloController {
+
+    @GetMapping("hello") //get방식임 hello페이지 들어가면 이게 호출됨
+    public String hello(Model model){
+        model.addAttribute("data","hello!");
+        return "hello"; //이 헬로를 클릭하면 아래와 같음 hello를 렌더링 시켜라
+        
+    }
+}
+
+```
+
+```html
+//resources/templates/hello.html
+
+<!doctype html>
+<html xmlns:th="http://www.tymeleaf.org">
+<head>
+    <title>Document</title>
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<p th:text="'안녕하세요. ' + ${data}">안녕하세요 손님</p>
+</body>
+</html>
+```
+
