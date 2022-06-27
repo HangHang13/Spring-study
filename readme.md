@@ -2,6 +2,10 @@
 
 
 
+[toc]
+
+
+
 # 0625
 
 https://www.youtube.com/watch?v=lqjOqeVzzsc&list=PLumVmq_uRGHgBrimIp2-7MCnoPUskVMnd&index=3
@@ -121,5 +125,99 @@ public class HelloController {
 <p th:text="'안녕하세요. ' + ${data}">안녕하세요 손님</p>
 </body>
 </html>
+```
+
+
+
+# 0627
+
+## 빌드하고 실행하기
+
+### 콘솔로 이동
+
+1. ./gradlew build
+2. cd build/libs
+3. java -jar hello-spring-0.01-SNAPSHOT.jar
+4. 실행확인
+
+![image-20220627142057182](readme.assets/image-20220627142057182.png)
+
+
+
+
+
+## 스프링 웹 개발 기초
+
+- 정적컨텐츠
+- MVC와 템플릿 엔진
+- API
+
+
+
+## 정적 컨텐츠
+
+- 스프링 부트 정적 컨텐츠 기능
+- static 하위 폴더에 hello-static.html 작성
+- localhost:8080/hello-static.html 입장 가능
+
+![image-20220627145351830](readme.assets/image-20220627145351830.png)
+
+
+
+## MVC와 템플릿 엔진
+
+- MVC : Model, View, Controller
+
+### Controller
+
+```java
+@Controller
+public class HelloController {
+
+    @GetMapping("hello") //hello 가 들어오면 이것이 실행됨
+    public String hello(Model model){
+        model.addAttribute("data","hello!");
+        return "hello";
+    }
+}
+
+```
+
+- 내부적인 로직에 집중
+
+### View
+
+`resources/remplate/hello-template.hmtl`
+
+```html
+<!doctype html>
+<html xmlns:th="http://www.tymeleaf.org">
+<head>
+    <title>Document</title>
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<p th:text="'안녕하세요. ' + ${data}">안녕하세요 손님</p>
+</body>
+</html>
+```
+
+- view는 화면을 그리는데 모든 역량을 집중해야함
+
+
+
+- tymleaf 템플릿의 장점은 서버없어도 html 파일 자체를 열어볼 수 있음 
+
+![image-20220627151305541](readme.assets/image-20220627151305541.png)
+
+
+
+
+
+## API
+
+### `@ResponseBody 문자반환`
+
+```
 ```
 
