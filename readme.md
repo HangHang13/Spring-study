@@ -371,3 +371,324 @@ public class MemoryMemberRepository implements MemberRepository {
 ![image-20220628163317401](readme.assets/image-20220628163317401.png)
 
 - art+enter누르면 해당 기능에 대한 소스를 임포트함
+
+
+
+## 11회원 서비스 개발
+
+```java
+//MemberServices
+
+package hello.hellospring.service;
+
+import hello.hellospring.domain.Member;
+import hello.hellospring.repository.MemberRepository;
+import hello.hellospring.repository.MemoryMemberRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public class MemberService {
+
+
+    private final MemberRepository memberRepository = new MemoryMemberRepository();
+
+    /**회원 가입**/
+    public Long join(Member member){
+        //중복회원 x
+//        Optional<Member> result = memberRepository.findByName(member.getName());
+//
+//
+//        result.ifPresent(m -> {
+//            throw new IllegalStateException("이미 존재하는 회원입니다.")
+//        }); 이런식으로도 가능
+        validateDuplicateMember(member); //중복회원 검증
+        memberRepository.save(member);
+        return member.getId();
+    }
+
+    private void validateDuplicateMember(Member member) {
+        memberRepository.findByName(member.getName())
+            .ifPresent(m -> {
+                throw new IllegalStateException("이미 존재하는 회원입니다.");
+            });
+    }
+    /**전체회원 조회**/
+    public List<Member> findMembers(){
+        return memberRepository.findAll();
+    }
+    public Optional<Member> findOne(Long memberId){
+        return memberRepository.findById(memberId);
+    }
+
+
+
+}
+
+```
+
+
+
+
+
+# 0629
+
+
+
+## 12회원 서비스 테스트
+
+- `ctrl + shift + t`
+- 테스트를 자동으로 만들어줌 
+
+
+
+- 중복회원 테스트케이스 하다보니 
+- `Expected java.lang.IllegalStateException to be thrown, but nothing was thrown`
+- 오류가 났다. 구글링해보니 이는 예외가 발생하지 않아서 생긴 문제였다.
+- member2 = 'spring' member1 = 'spiring' 이여서 중복되지 않았으므로 예외가 발생하지 않았었다. 
+
+
+
+- 같은 레포지토리를 사용하기 위해서
+
+```java
+public class MemberService {
+
+
+//    private final MemberRepository memberRepository = new MemoryMemberRepository();
+    private final MemberRepository memberRepository;
+
+    public MemberService(MemberRepository memberRepository){
+        this.memberRepository = memberRepository;
+    }
+```
+
+```java
+class MemberServiceTest {
+
+    MemberService memberService;
+    MemoryMemberRepository memberRepository = new MemoryMemberRepository();
+
+
+    @BeforeEach
+    public void beforeEach(){
+        memberRepository = new MemoryMemberRepository();
+        memberService = new MemberService(memberRepository);
+    }
+
+
+
+    @AfterEach
+    public void afterEach(){
+        memberRepository.clearStore();
+    }//삭제기능
+
+```
+
+
+
+## 13 컴포넌트 스캔
+
+## 스프링 빈과 의존간계
+
+### 스프링 빈을 등록하고, 의존관계 설정하기
+
+- 회원 컨트롤러가 회원서비스와 회원 리포지토리를 사용할 수 있게 의존관계를 준비하자.
+- 회원 컨트롤러에 의존관계 추가
+
+```
+```
+
+- 생성자에 `@Autowired`가 있으면 스프링이 연관된 객체를 스프링 컨테이너에서 찾아서 넣어준다. 이렇게 객체 의존관계를 외부에서 넣어주는 것을 DI (Dependency Injection), 의존성 주입이라고 한다.
+- 이전 테스트에서는 개발자가 직접 주입했고, 여기서는 `@Autowired`에 의해 스프링이 주입해준다.
+
+- 오류발생
+
+```
+```
+
+### 스프링 빈을 등록하는 2가지 방법
+
+- 컴포넌트 스캔(`@`)과 자동 의존관계 설정
+- 자바 코드로 직접 스프링 빈 등록하기
+
+
+
+### 컴포넌트 스캔과 의존관계 설정
+
+- `@Component` 애노테이션이 있으면 스프링 빈으로 자동 등록 된다.
+- `@Controller` 컨트롤러가 스프링 빈으로 자동 등록된 이유도 컴포넌트 스캔 때문이다.
+- `@Component`를 포함하는 다음 애노테이션도 스프링 빈으로 자동 등록된다.
+  - `@Controller`
+  - `@Service`
+  - `@Repository`
+
+![image-20220629140137822](readme.assets/image-20220629140137822.png)
+
+```java
+@Controller
+public class MemberController {
+    private final MemberService memberService;
+
+    @Autowired
+    public MemberController(MemberService memberService){
+        this.memberService = memberService;
+    }
+
+}
+```
+
+
+
+## 자바 코드로 직접 스프링 빈 등록하기
+
+- 회원 서비스와 회원 리보지토리의 `@Service`, `@Repository`, `@Autowired` 애노테이션을 제거하고 진행한다.
+
+```java
+//service/SpringConfig
+
+package hello.hellospring.service;
+
+import hello.hellospring.repository.MemberRepository;
+import hello.hellospring.repository.MemoryMemberRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SpringConfig {
+
+    @Bean
+    public MemberService memberService(){
+        return new MemberService(memberRepository());
+    }
+
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+}
+
+```
+
+
+
+- 참고 : DI에는 필드 주입 setter 주입, 생성자 주입 이렇게 3가지 방법이 있다 의존관계가 실행중에 동적으로 변하는 경우는 거의 없으므로 생성자 주입을 권장한다.
+- 참고 : 실무에서는 주로 정형화된 컨트롤러, 서비스, 리포지토리 같은 코드는 컴포넌트 스캔을 사용한다. 그리고 정형화 되지 않거나, 상황에 따라 구현 클래스를 변경해야 하면 설정을 통해 스프링 빈으로 등록한다.
+- 주의 : `@Autowired`를 통한 DI 는 `helloController`, `MemberService`등과 같이 스프링이 관리하는 객체에서만 동작한다. 스프링 빈으로 등록하지 않고 내가 직접 생성한 객체에서는 동작하지 않는다.
+- 스프링 컨테이너, DI 관련된 자세한 내용은 스프링 핵심 원리 강의에서 설명한다.
+
+
+
+## 회원관리 예제 - 웹 MVC 개발
+
+- 회원 웹기능 -홈 화면 추가
+- 회원 웹기능 - 등록
+- 회원 웹기능 - 조회
+
+
+
+### 회원 웹 기능 - 홈화면 추가
+
+- 홈 컨트롤러 추가
+
+```html
+/home.html
+
+<!doctype html>
+<html xmlns:th="http://www.tymeleaf.org">
+<body>
+
+<div class="container">
+  <div>
+    <h1>hello Spring</h1>
+    <p>회원기능</p>
+    <p>
+      <a href="/members/new">회원 가입</a>
+      <a href="/members">회원 목록</a>
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
+```
+
+```java
+package hello.hellospring.controller;
+
+
+import hello.hellospring.domain.Member;
+import hello.hellospring.domain.service.MemberService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+
+@Controller
+public class MemberController {
+    private final MemberService memberService;
+
+    @Autowired
+    public MemberController(MemberService memberService){
+        this.memberService = memberService;
+    }
+
+    @GetMapping("/members/new")
+    public String createForm(){
+        return "members/createMemberForm";
+    }
+
+    @PostMapping("/members/new")
+    public String create(MemberForm form){
+        Member member = new Member();
+        member.setName(form.getName());
+
+        memberService.join(member);
+
+        return "redirect:/";
+    }
+
+}
+
+```
+
+
+
+## 17 회원 웹기능 조회
+
+### 회원 컨트롤러에서 조회 기능
+
+```
+```
+
+### 회원 리스트 HTML
+
+```html
+<!doctype html>
+<html xmlns:th="http://www.tymeleaf.org">
+<body>
+
+<div class="container">
+    <div>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>이름</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="member : ${members}">
+                <td th:text="${member.id}"></td>
+                <td th:text="${member.name}"></td>
+            </tr>
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+</body>
+</html>
+```
+
