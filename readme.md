@@ -796,3 +796,86 @@ spring.jpa.hibernate.ddl-auto=none
 
 
 @commit을 넣어야 테스트케이스 실행할때 h2 db에서 확인할 수 있다. 아닌경우 자동으로 롤백됨
+
+
+
+# 0631
+
+# AOP 필요
+
+## 로그인 시간을 찍어보라
+
+- service/memverservice
+
+```java
+    public Long join(Member member){
+        //중복회원 x
+        
+        long start = System.currentTimeMillis();
+        try{
+            validateDuplicateMember(member); //중복회원 검증
+            memberRepository.save(member);
+            return member.getId();
+        }finally {
+            long finish = System.currentTimeMillis();
+            long timeMs = finish -start;
+            System.out.println("join = " + timeMs + "ms");
+        }
+
+
+    }
+
+
+   /**전체회원 조회**/
+    public List<Member> findMembers(){
+        long start = System.currentTimeMillis();
+        try{
+            return memberRepository.findAll();
+        }finally {
+            long finish = System.currentTimeMillis();
+            long timeMs = finish -start;
+            System.out.println("findMembers = " +timeMs + "ms");
+        }
+
+```
+
+- 이러면 유지보수 관리하기가 힘들다
+
+## 25AOP적용
+
+- spring.config에서
+
+```java
+//    @Bean
+//    public TimeTraceAop timeTraceAop(){
+//        return new TimeTraceAop();
+//    }
+```
+
+- 이걸 쓰거나
+
+```java
+@Aspect
+@Component //Bean이랑 같은기능?
+
+
+public class TimeTraceAop {
+    @Around("execution(* hello.hellospring..*(..))")
+    public Object execute(ProceedingJoinPoint joinPoint) throws Throwable{
+        long start = System.currentTimeMillis();
+        System.out.println("Start = " + joinPoint.toString());
+        try{
+            Object result = joinPoint.proceed();
+            return result;
+        }finally {
+            long finish = System.currentTimeMillis();
+            long timeMs = finish-start;
+            System.out.println("END = " + joinPoint.toString() +" "+ timeMs+ "ms");
+
+        }
+```
+
+
+
+- TimeTraceAop에서 컴포넌트를 붙여주면 된다.
+  - ` @Around("execution(* hello.hellospring..*(..))")` 타게팅 해줘야함
