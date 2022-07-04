@@ -879,3 +879,26 @@ public class TimeTraceAop {
 
 - TimeTraceAop에서 컴포넌트를 붙여주면 된다.
   - ` @Around("execution(* hello.hellospring..*(..))")` 타게팅 해줘야함
+
+
+
+# 0704
+
+- 하위 패키지에 컨트롤러 설정해주는데 계속 안됐었다.
+
+상위 패키지 `com.mysite.sbb`
+하위 패키지 `com.mysite.sbb.answer` , `com.mysite.sbb.question`
+
+.sbb해주니까 그제서야 된다. 이유가 뭘까?
+
+
+
+
+
+- **스프링의 의존성 주입(Dependency Injection) 방식 3가지**
+
+  
+
+  - @Autowired 속성 - 속성에 @Autowired 애너테이션을 적용하여 객체를 주입하는 방식
+  - 생성자 - 생성자를 작성하여 객체를 주입하는 방식 (**권장하는 방식**)
+  - Setter - Setter 메서드를 작성하여 객체를 주입하는 방식 (메서드에 @Autowired 애너테이션 적용이 필요하다.)
